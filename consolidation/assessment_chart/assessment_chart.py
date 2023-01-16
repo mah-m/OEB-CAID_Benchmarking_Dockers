@@ -344,6 +344,7 @@ def print_barplot(challenge_dir, aggregation, challenge_acronym):
     ax.bar(tools, values, color = orange_hex, edgecolor = orange_hex)
 
     ax.set_xlabel("Tools", fontsize=12)
+    ax.xticks(rotation = 45)
     ax.set_ylabel(f"{metric_name.capitalize()}", fontsize=12)
     ax.set_title(f"{metric_name.capitalize()} bar-plot in challenge {challenge_acronym}")
     ax.legend()
