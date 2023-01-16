@@ -1,14 +1,16 @@
 from __future__ import division
-# import requests
+import requests
 import json
 import os
 from argparse import ArgumentParser
 import datetime
 from assessment_chart import assessment_chart
+import logging
+import sys
 
-DEFAULT_eventMark = '2022-08-16'
+DEFAULT_eventMark = '2018-09-30'
 DEFAULT_OEB_API = "https://dev-openebench.bsc.es/api/scientific/graphql"
-DEFAULT_eventMark_id = "OEBCAID"
+DEFAULT_eventMark_id = "OEBE0110000000"
 
 def main(args):
 
@@ -29,78 +31,78 @@ def main(args):
     #     getOEBAggregations(response, data_dir)
     generate_manifest(data_dir, output_dir, participant_data)
 
-##get existing aggregation datasets for that challenges
-# def query_OEB_DB(bench_event_id):
-#     json_query = {'query': """query AggregationQuery($bench_event_id: String) {
-#     getChallenges(challengeFilters: {benchmarking_event_id: $bench_event_id}) {
-#         _id
-#         acronym
-#         metrics_categories{
-#           metrics {
-#             metrics_id
-#             orig_id
-#           }
-#         }
-#         datasets(datasetFilters: {type: "aggregation"}) {
-#                 _id
-#                 _schema
-#                 orig_id
-#                 community_ids
-#                 challenge_ids
-#                 datalink {
-#                     inline_data
-#                 }
-#         }
-#     }
-# }""",
-#                 'variables': {
-#                     'bench_event_id': bench_event_id
-#                 }
-#             }
-#     try:
-#         url = DEFAULT_OEB_API
-#         # get challenges and input datasets for provided benchmarking event
-#         r = requests.post(url=url, json=json_query, headers={'Content-Type': 'application/json'})
-#         response = r.json()
-#         data = response.get("data")
-#         if data is None:
-#             logging.fatal("For {} got response error from graphql query: {}".format(bench_event_id, r.text))
-#             sys.exit(6)
-#         if len(data["getChallenges"]) == 0:
-#             logging.fatal("No challenges associated to benchmarking event " + bench_event_id +
-#                           " in OEB. Please contact OpenEBench support for information about how to open a new challenge")
-#             sys.exit()
-#         else:
-#             return data.get('getChallenges')
-#     except Exception as e:
+#get existing aggregation datasets for that challenges
+def query_OEB_DB(bench_event_id):
+    json_query = {'query': """query AggregationQuery($bench_event_id: String) {
+    getChallenges(challengeFilters: {benchmarking_event_id: $bench_event_id}) {
+        _id
+        acronym
+        metrics_categories{
+          metrics {
+            metrics_id
+            orig_id
+          }
+        }
+        datasets(datasetFilters: {type: "aggregation"}) {
+                _id
+                _schema
+                orig_id
+                community_ids
+                challenge_ids
+                datalink {
+                    inline_data
+                }
+        }
+    }
+}""",
+                'variables': {
+                    'bench_event_id': bench_event_id
+                }
+            }
+    try:
+        url = DEFAULT_OEB_API
+        # get challenges and input datasets for provided benchmarking event
+        r = requests.post(url=url, json=json_query, headers={'Content-Type': 'application/json'})
+        response = r.json()
+        data = response.get("data")
+        if data is None:
+            logging.fatal("For {} got response error from graphql query: {}".format(bench_event_id, r.text))
+            sys.exit(6)
+        if len(data["getChallenges"]) == 0:
+            logging.fatal("No challenges associated to benchmarking event " + bench_event_id +
+                          " in OEB. Please contact OpenEBench support for information about how to open a new challenge")
+            sys.exit()
+        else:
+            return data.get('getChallenges')
+    except Exception as e:
 
-#         logging.exception(e)
+        logging.exception(e)
         
-# # function to populate bench_dir with existing aggregations
-# def getOEBAggregations(response, output_dir):
-#     for challenge in response:
+# function to populate bench_dir with existing aggregations
+def getOEBAggregations(response, output_dir):
+    for challenge in response:
         
-#         challenge['datasets'][0]['datalink']["inline_data"] = json.loads(challenge['datasets'][0]["datalink"]["inline_data"])
+        challenge['datasets'][0]['datalink']["inline_data"] = json.loads(challenge['datasets'][0]["datalink"]["inline_data"])
         
-#         for metrics in challenge['metrics_categories'][0]['metrics']:
-#             if metrics['metrics_id'] == challenge['datasets'][0]['datalink']["inline_data"]["visualization"]["x_axis"]:
-#                 challenge['datasets'][0]['datalink']["inline_data"]["visualization"]["x_axis"] = metrics['orig_id'].split(":")[-1]
-#             elif metrics['metrics_id'] == challenge['datasets'][0]['datalink']["inline_data"]["visualization"]["y_axis"]:
-#                 challenge['datasets'][0]['datalink']["inline_data"]["visualization"]["y_axis"] = metrics['orig_id'].split(":")[-1]
+        for metrics in challenge['metrics_categories'][0]['metrics']:
+            if metrics['metrics_id'] == challenge['datasets'][0]['datalink']["inline_data"]["visualization"]["x_axis"]:
+                challenge['datasets'][0]['datalink']["inline_data"]["visualization"]["x_axis"] = metrics['orig_id'].split(":")[-1]
+            elif metrics['metrics_id'] == challenge['datasets'][0]['datalink']["inline_data"]["visualization"]["y_axis"]:
+                challenge['datasets'][0]['datalink']["inline_data"]["visualization"]["y_axis"] = metrics['orig_id'].split(":")[-1]
         
-#         #replace tool_id for participant_id (for the visualitzation)
-#         for i in challenge['datasets'][0]['datalink']['inline_data']['challenge_participants']:
-#             i["participant_id"] = i.pop("tool_id")
+        #replace tool_id for participant_id (for the visualitzation)
+        for i in challenge['datasets'][0]['datalink']['inline_data']['challenge_participants']:
+            i["participant_id"] = i.pop("tool_id")
         
-#         new_aggregation = {
-#             "_id": challenge['datasets'][0]['_id'],
-#             "challenge_ids": [
-#                  challenge['acronym']
-#             ],
-#             'datalink': challenge['datasets'][0]['datalink']
-#         }
-#         with open(os.path.join(output_dir, challenge['acronym']+".json"), mode='w', encoding="utf-8") as f:
-#             json.dump(new_aggregation, f, sort_keys=True, indent=4, separators=(',', ': '))
+        new_aggregation = {
+            "_id": challenge['datasets'][0]['_id'],
+            "challenge_ids": [
+                 challenge['acronym']
+            ],
+            'datalink': challenge['datasets'][0]['datalink']
+        }
+        with open(os.path.join(output_dir, challenge['acronym']+".json"), mode='w', encoding="utf-8") as f:
+            json.dump(new_aggregation, f, sort_keys=True, indent=4, separators=(',', ': '))
   
 
 def read_participant_data(participant_path):
