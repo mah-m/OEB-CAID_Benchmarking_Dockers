@@ -440,16 +440,26 @@ def compute_metrics( prediction, gold_standards_dir, challenges,participant_name
             # find metrics of current pred for each threshold in <thresholds>; store to be later joined with other preds
         
         default_threshold=thresholds["default"]
-        for thr in thresholds:
-            if thr == "default":
-                default_dts_metrics=dict(dataset_metrics[default_threshold])
-                for key,value in default_dts_metrics.items():
+        # for thr in thresholds:
+        #     if thr == "default":
+        #         default_dts_metrics=dict(dataset_metrics[default_threshold])
+        #         for key,value in default_dts_metrics.items():
+        #             assessment=compute_metric_assessment(participant_name, community, challenge, f'dts_{key[1]}', value)
+        #             ASSESSMENTS.append(assessment)
+        #     else:
+        #         assessment=compute_metric_assessment(participant_name, community, challenge, f'opt_{thr}', thresholds[thr])
+        #         ASSESSMENTS.append(assessment)
+        for thr_name,thr_value in thresholds.items():
+            thr_dts_metrics=dict(dataset_metrics[thr_value])
+            for key,value in thr_dts_metrics.items():
+                if thr_name == "default":
                     assessment=compute_metric_assessment(participant_name, community, challenge, f'dts_{key[1]}', value)
                     ASSESSMENTS.append(assessment)
-            else:
-                assessment=compute_metric_assessment(participant_name, community, challenge, f'opt_{thr}', thresholds[thr])
-                ASSESSMENTS.append(assessment)
-        
+                else:
+                    if key[1] == thr_name:
+                        assessment=compute_metric_assessment(participant_name, community, challenge, f'opt_{key[1]}', value)
+                        ASSESSMENTS.append(assessment)
+
         for smry in smry_metrics:
             assessment=compute_metric_assessment(participant_name, community, challenge, f'{smry}', smry_metrics[smry])
             ASSESSMENTS.append(assessment)
